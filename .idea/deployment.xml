@@ -6,7 +6,7 @@
         <serverdata>
           <mappings>
             <mapping deploy="/COVID_DNNS" local="$PROJECT_DIR$" web="/" />
-            <mapping deploy="/anaconda3/envs/tf_gpu" local="$USER_HOME$/anaconda3/envs/DLCV" />
+            <mapping deploy="/anaconda3/envs/tf_gpu" local="$USER_HOME$/anaconda3/envs/DLCV" web="/" />
           </mappings>
         </serverdata>
       </paths>
