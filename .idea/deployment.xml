@@ -8,6 +8,9 @@
             <mapping deploy="/COVID_DNNS" local="$PROJECT_DIR$" web="/" />
             <mapping deploy="/anaconda3/envs/tf_gpu" local="$USER_HOME$/anaconda3/envs/DLCV" web="/" />
           </mappings>
+          <excludedPaths>
+            <excludedPath path="/COVID_DNNS/data" />
+          </excludedPaths>
         </serverdata>
       </paths>
     </serverData>
