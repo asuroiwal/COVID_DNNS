@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig host="phobos.eecs.qmul.ac.uk" id="1359c420-18d7-44d6-9ffb-20469f8fd8a2" keyPath="$USER_HOME$/.ssh/id_rsa" port="22" nameFormat="DESCRIPTIVE" username="as405" />
+    </configs>
+  </component>
+</project>
