@@ -23,9 +23,9 @@ def sort_dataset(files_csv, folder, dataset_type):
 				print ("Successfully created the directory %s " % path_folder)
 		os.rename(os.path.join(path, folder, dataset_type, file.split()[1]), os.path.join(path, folder, dataset_type, label, file.split()[1]))
 
-with open("train_split.txt") as f:
+with open("../train_split.txt") as f:
     train_files = f.readlines()
-with open("test_split.txt") as f:
+with open("../test_split.txt") as f:
     test_files = f.readlines()
 
 sort_dataset(train_files, "data", "train")
