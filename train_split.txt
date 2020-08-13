@@ -1,3 +1,4 @@
+id file_name class dataset
 3 SARS-10.1148rg.242035193-g04mr34g0-Fig8a-day0.jpeg pneumonia cohen
 3 SARS-10.1148rg.242035193-g04mr34g0-Fig8b-day5.jpeg pneumonia cohen
 3 SARS-10.1148rg.242035193-g04mr34g0-Fig8c-day10.jpeg pneumonia cohen

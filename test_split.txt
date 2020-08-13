@@ -1,3 +1,4 @@
+id file_name class dataset
 8 SARS-10.1148rg.242035193-g04mr34g05x-Fig5-day9.jpeg pneumonia cohen
 31 streptococcus-pneumoniae-pneumonia-temporal-evolution-1-day0.jpg pneumonia cohen
 31 streptococcus-pneumoniae-pneumonia-temporal-evolution-1-day1.jpg pneumonia cohen
