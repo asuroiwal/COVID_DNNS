@@ -330,3 +330,6 @@ venv/Scripts/
 venv/etc/
 venv/pyvenv.cfg
 venv/share/
+venv/Lib/site-packages/pip/_internal/resolution/legacy/__pycache__/
+venv/Lib/site-packages/pip/_vendor/six.py
+venv/Lib/site-packages/setuptools/command/
