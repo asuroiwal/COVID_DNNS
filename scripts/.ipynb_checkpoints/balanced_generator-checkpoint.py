@@ -111,8 +111,7 @@ class BalanceCovidDataset(keras.utils.Sequence):
             shuffle=True,
             augmentation=apply_augmentation,
             covid_percent=0.3,
-            top_percent=0.08,
-            class_weights=[1., 1., 6.]
+            top_percent=0.08
     ):
         'Initialization'
         self.datadir = data_dir
@@ -137,16 +136,15 @@ class BalanceCovidDataset(keras.utils.Sequence):
             datasets['normal'] + datasets['pneumonia'],
             datasets['COVID-19'],
         ]
+        print(len(self.datasets[0]), len(self.datasets[1]))
         self.N = len(self.dataset)
         self.classes = get_classes(self.dataset)
-        self.class_weights = class_weights
-        for v in self.datasets:
-            np.random.shuffle(v)
+
         self.on_epoch_end()
 
     def __next__(self):
         # Get one batch of data
-        batch_x, batch_y, weights = self.__getitem__(self.n)
+        batch_x, batch_y = self.__getitem__(self.n)
         # Batch index
         self.n += 1
 
@@ -155,13 +153,13 @@ class BalanceCovidDataset(keras.utils.Sequence):
             self.on_epoch_end
             self.n = 0
 
-        yield batch_x, batch_y, weights
+        yield batch_x, batch_y
 
     def __len__(self):
         if self.is_testing:
-            return int(np.ceil(len(self.dataset) / float(self.batch_size)))
+            return int(np.ceil(len(self.datasets) / float(self.batch_size)))
         if self.is_validation:
-            return int(np.ceil(len(self.dataset) / float(self.batch_size)))
+            return int(np.ceil(len(self.datasets) / float(self.batch_size)))
         return int(np.ceil(len(self.datasets[0]) / float(self.batch_size)))
 
     def on_epoch_end(self):
@@ -171,10 +169,11 @@ class BalanceCovidDataset(keras.utils.Sequence):
                 np.random.shuffle(v)
 
     def __getitem__(self, idx):
-        batch_x, batch_y = np.zeros(
-            (self.batch_size, *self.input_shape,
-            self.num_channels)), np.zeros(self.batch_size)
-        if self.is_training:
+        if self.is_training or self.is_validation:
+            batch_x, batch_y = np.zeros(
+                (self.batch_size, *self.input_shape,
+                 self.num_channels)), np.zeros(self.batch_size)
+
             batch_files = self.datasets[0][idx * self.batch_size:(idx + 1) *
                                            self.batch_size]
 
@@ -189,34 +188,47 @@ class BalanceCovidDataset(keras.utils.Sequence):
             for i in range(covid_size):
                 batch_files[covid_inds[i]] = covid_files[i]
 
+            for i in range(len(batch_files)):
+                sample = batch_files[i].split()
+
+                if self.is_training:
+                    folder = 'train'
+                elif self.is_validation:
+                    folder = 'train'
+                elif self.is_testing:
+                    folder = 'test'
+
+                x = process_image_file(os.path.join(self.datadir, folder, sample[1]),
+                                       self.top_percent,
+                                       self.input_shape[0])
+
+                if self.is_training and hasattr(self, 'augmentation'):
+                    x = self.augmentation(x)
+
+                x = x.astype('float32') / 255.0
+                y = self.mapping[sample[2]]
+
+                batch_x[i] = x
+                batch_y[i] = y
         else:
+            batch_x, batch_y = np.zeros(
+                (self.batch_size, *self.input_shape,
+                 self.num_channels)), np.zeros(self.batch_size)
+
             batch_files = self.dataset[idx * self.batch_size:(idx + 1) *
                                            self.batch_size]
 
-        for i in range(len(batch_files)):
-            sample = batch_files[i].split()            
-        
-            if self.is_training:
-                folder = 'train'
-            elif self.is_validation:
-                folder = 'train'
-            else:
+            for i in range(len(batch_files)):
+                sample = batch_files[i].split()
                 folder = 'test'
 
-            x = process_image_file(os.path.join(self.datadir, folder, sample[1]),
-                                   self.top_percent,
-                                   self.input_shape[0])
+                x = process_image_file(os.path.join(self.datadir, folder, sample[1]),
+                                       self.top_percent,
+                                       self.input_shape[0])
 
-            if self.is_training and hasattr(self, 'augmentation'):
-                 x = self.augmentation(x)
+                x = x.astype('float32') / 255.0
+                y = self.mapping[sample[2]]
 
-            x = x.astype('float32') / 255.0
-            y = self.mapping[sample[2]]
-
-            batch_x[i] = x
-            batch_y[i] = y
-
-        class_weights = self.class_weights
-        weights = np.take(class_weights, batch_y.astype('int64'))
-        
-        return batch_x, keras.utils.to_categorical(batch_y, num_classes=self.n_classes), weights
+                batch_x[i] = x
+                batch_y[i] = y
+        return batch_x, keras.utils.to_categorical(batch_y, num_classes=self.n_classes)
