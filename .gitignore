@@ -2,5 +2,5 @@
 /venv/
 /.idea/
 /saved_models/
-.virtual_documents/
-scripts/__pycache__/
+/.virtual_documents/
+/scripts/__pycache__/

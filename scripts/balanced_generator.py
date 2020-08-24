@@ -69,17 +69,12 @@ def apply_augmentation(img):
     img = _augmentation_transform.random_transform(img)
     return img
 
-'''def _process_csv_file(file):
-    with open(file, 'r') as fr:
-        files = fr.readlines()
-    return files'''
 
 def get_classes(dataset):
     classes = []
     for line in dataset:
         classes.append(line.split()[2])
     return classes
-
 
 def get_datasets(lines):
     datasets = {'normal': [], 'pneumonia': [], 'COVID-19': []}
@@ -89,16 +84,13 @@ def get_datasets(lines):
         dataset.append(line)
     return dataset, datasets
 
-class BalanceCovidDataset(keras.utils.Sequence):
+class BalancedDatasetGenerator(keras.utils.Sequence):
     'Generates data for Keras'
 
     def __init__(
             self,
             data_dir,
             data_files,
-            is_training=True,
-            is_validation=False,
-            is_testing=False,
             batch_size=8,
             input_shape=(224, 224),
             n_classes=3,
@@ -116,9 +108,6 @@ class BalanceCovidDataset(keras.utils.Sequence):
     ):
         'Initialization'
         self.datadir = data_dir
-        self.is_training = is_training
-        self.is_testing= is_testing
-        self.is_validation = is_validation
         self.batch_size = batch_size
         self.input_shape = input_shape
         self.n_classes = n_classes
@@ -140,13 +129,11 @@ class BalanceCovidDataset(keras.utils.Sequence):
         self.N = len(self.dataset)
         self.classes = get_classes(self.dataset)
         self.class_weights = class_weights
-        for v in self.datasets:
-            np.random.shuffle(v)
         self.on_epoch_end()
 
     def __next__(self):
         # Get one batch of data
-        batch_x, batch_y, weights = self.__getitem__(self.n)
+        batch_x, batch_y = self.__getitem__(self.n)
         # Batch index
         self.n += 1
 
@@ -155,13 +142,9 @@ class BalanceCovidDataset(keras.utils.Sequence):
             self.on_epoch_end
             self.n = 0
 
-        yield batch_x, batch_y, weights
+        yield batch_x, batch_y
 
     def __len__(self):
-        if self.is_testing:
-            return int(np.ceil(len(self.dataset) / float(self.batch_size)))
-        if self.is_validation:
-            return int(np.ceil(len(self.dataset) / float(self.batch_size)))
         return int(np.ceil(len(self.datasets[0]) / float(self.batch_size)))
 
     def on_epoch_end(self):
@@ -174,40 +157,30 @@ class BalanceCovidDataset(keras.utils.Sequence):
         batch_x, batch_y = np.zeros(
             (self.batch_size, *self.input_shape,
             self.num_channels)), np.zeros(self.batch_size)
-        if self.is_training:
-            batch_files = self.datasets[0][idx * self.batch_size:(idx + 1) *
-                                           self.batch_size]
+        
+        batch_files = self.datasets[0][idx * self.batch_size:(idx + 1) *
+                                             self.batch_size]
 
-            # upsample covid cases
-            covid_size = max(int(len(batch_files) * self.covid_percent), 1)
-            covid_inds = np.random.choice(np.arange(len(batch_files)),
-                                          size=covid_size,
-                                          replace=False)
-            covid_files = np.random.choice(self.datasets[1],
-                                           size=covid_size,
-                                           replace=False)
-            for i in range(covid_size):
-                batch_files[covid_inds[i]] = covid_files[i]
+        # upsample covid cases
+        covid_size = max(int(len(batch_files) * self.covid_percent), 1)
+        covid_inds = np.random.choice(np.arange(len(batch_files)),
+                                        size=covid_size,
+                                        replace=False)
+        covid_files = np.random.choice(self.datasets[1],
+                                        size=covid_size,
+                                        replace=False)
+        for i in range(covid_size):
+            batch_files[covid_inds[i]] = covid_files[i]
 
-        else:
-            batch_files = self.dataset[idx * self.batch_size:(idx + 1) *
-                                           self.batch_size]
-
+        folder = 'train'
         for i in range(len(batch_files)):
             sample = batch_files[i].split()            
-        
-            if self.is_training:
-                folder = 'train'
-            elif self.is_validation:
-                folder = 'train'
-            else:
-                folder = 'test'
-
+                
             x = process_image_file(os.path.join(self.datadir, folder, sample[1]),
                                    self.top_percent,
                                    self.input_shape[0])
 
-            if self.is_training and hasattr(self, 'augmentation'):
+            if hasattr(self, 'augmentation'):
                  x = self.augmentation(x)
 
             x = x.astype('float32') / 255.0
@@ -215,8 +188,5 @@ class BalanceCovidDataset(keras.utils.Sequence):
 
             batch_x[i] = x
             batch_y[i] = y
-
-        class_weights = self.class_weights
-        weights = np.take(class_weights, batch_y.astype('int64'))
         
-        return batch_x, keras.utils.to_categorical(batch_y, num_classes=self.n_classes), weights
+        return batch_x, keras.utils.to_categorical(batch_y, num_classes=self.n_classes)
