@@ -1,6 +1,6 @@
 # COVID_DNNS
 
-Analysing the effectiveness of various DNNS on COVIDx Dataset, and combining them to form an ensemble. Finally predict teh new image outcome by voting of ensemble.
+Analysing the effectiveness of various DNNS on COVIDx Dataset, and combining them to form an ensemble. Finally predict the new class of new CXR using ensemble voting.
 
 Models Analysed:
 
