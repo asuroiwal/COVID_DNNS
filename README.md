@@ -13,7 +13,7 @@ Models Analysed:
 7. MobileNetV2
 8. NASNetLarge
 9. NASNetMobile
-10 ResNet101V2
+10. ResNet101V2
 11. ResNet152V2
 12. ResNet50V2
 13. VGG16
